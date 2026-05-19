@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+
+# Node
+node_modules/
+project/frontend/dist/
+
+# Database
+*.db
+
+# Logs
+project/backend/logs/
+
+# Test artifacts
+.pytest_cache/
+.playwright-cli/
+*.png
+performance_report*.html
+performance_data*.csv
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.claude/

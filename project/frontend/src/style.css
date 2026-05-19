@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coral-50: #fef2f2;
+  --color-coral-100: #ffe1e1;
+  --color-coral-200: #ffc8c8;
+  --color-coral-300: #ffa3a3;
+  --color-coral-400: #fc6d6d;
+  --color-coral-500: #e85d5d;
+  --color-coral-600: #d43a3a;
+  --color-coral-700: #b22d2d;
+  --color-coral-800: #932828;
+  --color-coral-900: #7b2828;
+
+  --color-warm-50: #fdfbf7;
+  --color-warm-100: #faf6ee;
+  --color-warm-200: #f4ecda;
+  --color-warm-300: #eaddc2;
+  --color-warm-400: #dcc79d;
+  --color-warm-500: #cfb07a;
+  --color-warm-600: #b89457;
+  --color-warm-700: #9a7942;
+  --color-warm-800: #80633a;
+  --color-warm-900: #6b5134;
+
+  --color-slate-50: #f8f7f6;
+  --color-slate-100: #efedeb;
+  --color-slate-200: #ddd9d4;
+  --color-slate-300: #c4bdb5;
+  --color-slate-400: #a89e93;
+  --color-slate-500: #8d8378;
+  --color-slate-600: #746b61;
+  --color-slate-700: #5f574e;
+  --color-slate-800: #514a43;
+  --color-slate-900: #46403a;
+
+  --font-display: 'Outfit', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-warm-50);
+  color: var(--color-slate-800);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Transition helpers */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-up-leave-active {
+  transition: all 0.2s ease-in;
+}
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -8px rgba(232, 93, 93, 0.08),
+              0 4px 12px -4px rgba(0, 0, 0, 0.05);
+}
+
+/* Button press */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Input focus */
+.input-fancy:focus {
+  border-color: var(--color-coral-300);
+  box-shadow: 0 0 0 4px rgba(232, 93, 93, 0.08);
+  outline: none;
+}
+
+/* Tag/badge */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
