@@ -32,4 +32,3 @@ performance_data*.csv
 Thumbs.db
 .claude/
 .coverage
-project/backend/uploads/*.jpg
