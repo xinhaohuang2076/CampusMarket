@@ -31,3 +31,5 @@ performance_data*.csv
 .DS_Store
 Thumbs.db
 .claude/
+.coverage
+project/backend/uploads/*.jpg

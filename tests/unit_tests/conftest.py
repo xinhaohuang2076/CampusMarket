@@ -1,54 +1,61 @@
-"""pytest fixtures - truly isolated in-memory SQLite, won't touch seed db"""
+"""pytest fixtures - 独立 tempfile SQLite，避免死锁"""
 import sys
 import os
 import pytest
+import tempfile
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../project/backend')))
 
-from flask import Flask
-from flask_jwt_extended import JWTManager
-from flask_cors import CORS
-from models import db as _db
-
-
-TEST_SECRET = 'test-secret-for-pytest-only'
+from fastapi import FastAPI
+from models import init_db
 
 
 @pytest.fixture(scope='function')
 def app():
-    """Create a fresh app with in-memory SQLite, independent of seed db."""
-    application = Flask(__name__)
-    application.config['TESTING'] = True
-    application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    application.config['SECRET_KEY'] = TEST_SECRET
-    application.config['JWT_SECRET_KEY'] = TEST_SECRET
-    application.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400
+    """每个测试创建独立的 tempfile SQLite，互不污染"""
+    tmp = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
+    tmp.close()
+    init_db(f'sqlite:///{tmp.name}')
 
-    _db.init_app(application)
-    JWTManager(application)
+    application = FastAPI()
 
-    # 注册蓝图（路由测试需要）
     from routes import auth_bp, product_bp, message_bp, transaction_bp, review_bp, admin_bp
-    application.register_blueprint(auth_bp)
-    application.register_blueprint(product_bp)
-    application.register_blueprint(message_bp)
-    application.register_blueprint(transaction_bp)
-    application.register_blueprint(review_bp)
-    application.register_blueprint(admin_bp)
+    application.include_router(auth_bp)
+    application.include_router(product_bp)
+    application.include_router(message_bp)
+    application.include_router(transaction_bp)
+    application.include_router(review_bp)
+    application.include_router(admin_bp)
 
-    with application.app_context():
-        _db.create_all()
-        yield application
-        _db.drop_all()
+    yield application
+
+    # 清理共享 session
+    from models import _DBProxy
+    if _DBProxy._shared_session:
+        try:
+            _DBProxy._shared_session.close()
+        except Exception:
+            pass
+        _DBProxy._shared_session = None
+
+    # 删临时文件
+    from models import engine
+    if engine and hasattr(engine, 'url') and str(engine.url).startswith('sqlite'):
+        db_path = engine.url.database
+        if db_path and os.path.exists(db_path):
+            try:
+                os.unlink(db_path)
+            except PermissionError:
+                pass
 
 
 @pytest.fixture
 def client(app):
-    return app.test_client()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 @pytest.fixture
 def session(app):
-    with app.app_context():
-        yield _db.session
+    from models import db as _db
+    return _db.session

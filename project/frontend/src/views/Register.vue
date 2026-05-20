@@ -51,29 +51,29 @@ async function handleRegister() {
         <form @submit.prevent="handleRegister" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">学号 <span class="text-coral-400">*</span></label>
-            <input v-model="form.student_id" type="text" maxlength="10"
+            <input v-model="form.student_id" type="text" maxlength="10" data-testid="register-student-id"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="22023开头，10位数字" />
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">邮箱 <span class="text-coral-400">*</span></label>
-            <input v-model="form.email" type="text"
+            <input v-model="form.email" type="text" data-testid="register-email"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="@qq.com 或 @163.com" />
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">密码 <span class="text-coral-400">*</span></label>
-            <input v-model="form.password" type="password"
+            <input v-model="form.password" type="password" data-testid="register-password"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="6-64位密码" />
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">昵称</label>
-            <input v-model="form.nickname" type="text"
+            <input v-model="form.nickname" type="text" data-testid="register-nickname"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="选填，默认使用学号" />
           </div>
-          <button type="submit" :disabled="loading"
+          <button type="submit" data-testid="register-submit" :disabled="loading"
             class="w-full bg-coral-500 text-white py-2.5 rounded-xl font-medium hover:bg-coral-600 disabled:opacity-50 transition btn-press shadow-sm shadow-coral-200">
             {{ loading ? '注册中...' : '注册' }}
           </button>

@@ -1,73 +1,74 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from models import db, Review, Transaction, User
-from utils import validate_rating, paginate
+from utils import validate_rating, paginate, get_current_user
 
-review_bp = Blueprint('review', __name__)
+review_bp = APIRouter()
 
 
-@review_bp.route('/api/reviews', methods=['POST'])
-@jwt_required()
-def create_review():
-    user_id = int(get_jwt_identity())
-    data = request.get_json()
-    if not data or not data.get('transaction_id'):
-        return jsonify({'error': '缺少交易ID'}), 400
+class CreateReview(BaseModel):
+    transaction_id: int
+    rating: int
+    content: str = ''
 
-    t = db.session.get(Transaction, data['transaction_id'])
+
+@review_bp.post('/api/reviews', status_code=201)
+def create_review(data: CreateReview, current_user: User = Depends(get_current_user)):
+    t = db.session.get(Transaction, data.transaction_id)
     if not t:
-        return jsonify({'error': '交易记录不存在'}), 404
+        raise HTTPException(404, '交易不存在')
     if t.status != 'completed':
-        return jsonify({'error': '只能对已完成的交易进行评价'}), 400
-    if t.buyer_id != user_id and t.seller_id != user_id:
-        return jsonify({'error': '无权评价此交易'}), 403
+        raise HTTPException(400, '只能评价已完成的交易')
+    if current_user.id not in (t.buyer_id, t.seller_id):
+        raise HTTPException(403, '不是此交易的参与者')
+    if not validate_rating(data.rating):
+        raise HTTPException(400, '评分须为1-5的整数')
 
-    existing = Review.query.filter_by(transaction_id=t.id).first()
+    existing = Review.query.filter_by(transaction_id=data.transaction_id,
+                                       from_user=current_user.id).first()
     if existing:
-        return jsonify({'error': '该交易已评价过'}), 409
+        raise HTTPException(409, '已评价过此交易')
 
-    rating = data.get('rating')
-    if not validate_rating(rating):
-        return jsonify({'error': '评分须为1-5的整数'}), 400
-
-    # 被评价人：交易对方
-    to_user = t.seller_id if user_id == t.buyer_id else t.buyer_id
-
-    review = Review(
-        transaction_id=t.id,
-        from_user=user_id,
-        to_user=to_user,
-        rating=int(rating),
-        content=(data.get('content') or '').strip()
+    to_user_id = t.seller_id if current_user.id == t.buyer_id else t.buyer_id
+    rev = Review(
+        transaction_id=data.transaction_id,
+        from_user=current_user.id,
+        to_user=to_user_id,
+        rating=data.rating,
+        content=data.content
     )
-    db.session.add(review)
+    db.session.add(rev)
 
-    # 更新信用分
-    target = db.session.get(User, to_user)
-    if target:
-        # 简单算法：好评 +2，差评 -2
-        if int(rating) >= 4:
-            target.credit += 2
-        elif int(rating) <= 2:
-            target.credit = max(0, target.credit - 2)
+    seller = db.session.get(User, to_user_id)
+    if seller:
+        if data.rating >= 4:
+            seller.credit += 2
+        elif data.rating <= 2:
+            seller.credit -= 2
         else:
-            target.credit += 1
-        target.credit = min(target.credit, 200)
+            seller.credit += 1
+        seller.credit = max(0, min(200, seller.credit))
 
     db.session.commit()
-    return jsonify({'message': '评价成功', 'review': review.to_dict()}), 201
+    return {'message': '评价成功', 'review': rev.to_dict()}
 
 
-@review_bp.route('/api/users/<int:user_id>/reviews', methods=['GET'])
-def list_reviews(user_id):
-    """查看某个用户收到的评价"""
-    page = request.args.get('page', 1, type=int)
-    query = Review.query.filter_by(to_user=user_id).order_by(Review.created_at.desc())
+@review_bp.get('/api/users/{user_id}/reviews')
+def user_reviews(user_id: int, page: int = 1):
+    user = db.session.get(User, user_id)
+    if not user:
+        raise HTTPException(404, '用户不存在')
+
+    query = Review.query.filter_by(to_user=user_id).order_by(Review.id.desc())
     result = paginate(query, page)
-
-    # 附带平均评分
+    # 附加评价者信息
+    for item in result['items']:
+        rev = db.session.get(Review, item['id'])
+        if rev and rev.reviewer:
+            item['from_nickname'] = rev.reviewer.nickname
+    # 计算平均评分
     from sqlalchemy import func
-    avg = db.session.query(func.avg(Review.rating)).filter(Review.to_user == user_id).scalar()
-    result['avg_rating'] = round(float(avg), 1) if avg else None
-
-    return jsonify(result), 200
+    avg = db.session.query(func.avg(Review.rating)).filter(
+        Review.to_user == user_id).scalar()
+    result['avg_rating'] = round(avg, 1) if avg else 0
+    return result

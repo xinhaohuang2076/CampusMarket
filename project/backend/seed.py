@@ -2,15 +2,15 @@
 import sys
 import os
 import json
-from random import choice, randint, sample
+from random import choice, randint, sample, shuffle
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import create_app
-from models import db, User, Product, Message, Favorite, Transaction, Review
+from config import Config
+from models import db, User, Product, Message, Favorite, Transaction, Review, init_db
 
-app = create_app()
+init_db(Config.SQLALCHEMY_DATABASE_URI)
 
 BATCH = 100
 
@@ -188,38 +188,62 @@ def seed_favorites():
 
 def seed_messages():
     print('正在生成留言数据...')
-    products = Product.query.filter(Product.status == 'onsale').limit(300).all()
+    products = Product.query.all()
+    shuffle(products)
     users = User.query.all()
     count = 0
-    for p in products:
-        for _ in range(randint(0, 3)):
+
+    # 前 750 件商品每件至少 1 条留言（确保绝大多数商品有留言）
+    for p in products[:750]:
+        buyer = choice(users[200:])
+        while buyer.id == p.user_id:
             buyer = choice(users[200:])
-            if buyer.id == p.user_id:
-                continue
-            m = Message(
+        m = Message(
+            product_id=p.id,
+            from_user=buyer.id,
+            to_user=p.user_id,
+            content=choice(COMMENTS),
+            created_at=datetime.utcnow() - timedelta(hours=randint(1, 168))
+        )
+        db.session.add(m)
+        count += 1
+        if randint(0, 1):
+            reply = Message(
                 product_id=p.id,
-                from_user=buyer.id,
-                to_user=p.user_id,
+                from_user=p.user_id,
+                to_user=buyer.id,
+                content=choice(REPLIES),
+                parent_id=m.id,
+                created_at=m.created_at + timedelta(hours=randint(1, 24))
+            )
+            db.session.add(reply)
+            count += 1
+        if count % BATCH == 0:
+            db.session.commit()
+
+    # 部分商品额外追加留言（让留言总数保持在 600+）
+    for p in products[:200]:
+        extra = randint(0, 2)
+        for _ in range(extra):
+            buyer = choice(users[200:])
+            while buyer.id == p.user_id:
+                buyer = choice(users[200:])
+            db.session.add(Message(
+                product_id=p.id, from_user=buyer.id, to_user=p.user_id,
                 content=choice(COMMENTS),
                 created_at=datetime.utcnow() - timedelta(hours=randint(1, 168))
-            )
-            db.session.add(m)
+            ))
             count += 1
-            if randint(0, 1):
-                reply = Message(
-                    product_id=p.id,
-                    from_user=p.user_id,
-                    to_user=buyer.id,
-                    content=choice(REPLIES),
-                    parent_id=m.id,
-                    created_at=m.created_at + timedelta(hours=randint(1, 24))
-                )
-                db.session.add(reply)
-                count += 1
-            if count % BATCH == 0:
-                db.session.commit()
+        if count % BATCH == 0:
+            db.session.commit()
+
     db.session.commit()
-    print(f'  已创建 {Message.query.count()} 条留言（含回复）')
+    # 统计无留言商品数
+    from sqlalchemy import func
+    all_ids = set(p.id for p in products)
+    has_msgs = set(r[0] for r in Message.query.with_entities(Message.product_id).distinct().all())
+    no_msg = len(all_ids - has_msgs)
+    print(f'  已创建 {Message.query.count()} 条留言（含回复，无留言商品: {no_msg} 件）')
 
 
 def seed_transactions_and_reviews():
@@ -276,32 +300,31 @@ def seed_admin():
 
 
 def seed():
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+    db.drop_all()
+    db.create_all()
 
-        seed_users()
-        seed_products()
-        seed_favorites()
-        seed_messages()
-        seed_transactions_and_reviews()
-        seed_admin()
+    seed_users()
+    seed_products()
+    seed_favorites()
+    seed_messages()
+    seed_transactions_and_reviews()
+    seed_admin()
 
-        print()
-        print('=' * 40)
-        print('种子数据生成完成！')
-        print(f'  用户: {User.query.count()} 人')
-        print(f'  商品: {Product.query.count()} 件')
-        print(f'  收藏: {Favorite.query.count()} 条')
-        print(f'  留言: {Message.query.count()} 条')
-        print(f'  交易: {Transaction.query.count()} 笔')
-        print(f'  评价: {Review.query.count()} 条')
-        print('=' * 40)
-        print()
-        print('测试账号:')
-        print('  学号 2202300001 ~ 2202300005, 密码 123456')
-        print('  管理员 2202300000, 密码 admin123')
-        print('  其他学生: 学号=密码')
+    print()
+    print('=' * 40)
+    print('种子数据生成完成！')
+    print(f'  用户: {User.query.count()} 人')
+    print(f'  商品: {Product.query.count()} 件')
+    print(f'  收藏: {Favorite.query.count()} 条')
+    print(f'  留言: {Message.query.count()} 条')
+    print(f'  交易: {Transaction.query.count()} 笔')
+    print(f'  评价: {Review.query.count()} 条')
+    print('=' * 40)
+    print()
+    print('测试账号:')
+    print('  学号 2202300001 ~ 2202300005, 密码 123456')
+    print('  管理员 2202300000, 密码 admin123')
+    print('  其他学生: 学号=密码')
 
 
 if __name__ == '__main__':

@@ -49,17 +49,17 @@ async function handleLogin() {
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">学号</label>
-            <input v-model="form.student_id" type="text"
+            <input v-model="form.student_id" type="text" data-testid="login-student-id"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="10位学号" />
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">密码</label>
-            <input v-model="form.password" type="password"
+            <input v-model="form.password" type="password" data-testid="login-password"
               class="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
               placeholder="输入密码" />
           </div>
-          <button type="submit" :disabled="loading"
+          <button type="submit" data-testid="login-submit" :disabled="loading"
             class="w-full bg-coral-500 text-white py-2.5 rounded-xl font-medium hover:bg-coral-600 disabled:opacity-50 transition btn-press shadow-sm shadow-coral-200">
             {{ loading ? '登录中...' : '登录' }}
           </button>

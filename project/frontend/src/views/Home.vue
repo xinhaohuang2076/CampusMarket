@@ -99,12 +99,12 @@ function friendlyTime(dateStr) {
           <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
-          <input v-model="keyword" @keyup.enter="search"
+          <input v-model="keyword" @keyup.enter="search" data-testid="search-input"
             class="w-full border border-warm-200 rounded-xl pl-10 pr-3 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
             placeholder="搜索商品名称或描述..." />
         </div>
         <div>
-          <select v-model="category"
+          <select v-model="category" data-testid="category-select"
             class="border border-warm-200 rounded-xl px-3 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy">
             <option value="">全部分类</option>
             <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
@@ -157,7 +157,7 @@ function friendlyTime(dateStr) {
 
     <!-- 商品网格 -->
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div v-for="(p, idx) in products" :key="p.id" @click="goDetail(p.id)"
+      <div v-for="(p, idx) in products" :key="p.id" @click="goDetail(p.id)" data-testid="product-card"
         class="bg-white rounded-2xl card-hover cursor-pointer overflow-hidden border border-warm-100"
         :style="{ animationDelay: `${idx * 40}ms` }">
         <div class="aspect-[4/3] bg-gradient-to-br from-warm-50 to-warm-100 flex items-center justify-center overflow-hidden relative">

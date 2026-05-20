@@ -173,7 +173,7 @@ onMounted(() => {
       <div class="md:col-span-2">
         <div class="bg-white rounded-2xl shadow-sm border border-warm-100 p-6 sticky top-24">
           <div class="flex items-start justify-between gap-3">
-            <h1 class="font-display text-xl font-bold text-slate-800 leading-snug">{{ product.title }}</h1>
+            <h1 class="font-display text-xl font-bold text-slate-800 leading-snug" data-testid="product-title">{{ product.title }}</h1>
             <span :class="statusConfig[product.status]?.class" class="tag border shrink-0">
               {{ statusConfig[product.status]?.text }}
             </span>
@@ -181,7 +181,7 @@ onMounted(() => {
 
           <div class="mt-4 flex items-baseline gap-1">
             <span class="text-2xl font-bold text-coral-500">¥</span>
-            <span class="text-3xl font-bold text-coral-500">{{ product.price.toFixed(2) }}</span>
+            <span class="text-3xl font-bold text-coral-500" data-testid="product-price">{{ product.price.toFixed(2) }}</span>
           </div>
 
           <div class="flex flex-wrap gap-2 mt-4">
@@ -218,11 +218,11 @@ onMounted(() => {
               </button>
             </template>
             <template v-else-if="product.status === 'onsale' || product.status === 'reserved'">
-              <button @click="initiateTransaction"
+              <button @click="initiateTransaction" data-testid="want-btn"
                 class="flex-1 bg-coral-500 text-white px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-coral-600 transition btn-press shadow-sm shadow-coral-200">
                 我想要
               </button>
-              <button @click="toggleFavorite"
+              <button @click="toggleFavorite" data-testid="favorite-btn"
                 :class="favorited ? 'bg-coral-50 border-coral-200 text-coral-500' : 'border-slate-200 text-slate-500 hover:border-coral-200 hover:text-coral-500'"
                 class="border-2 px-4 py-2.5 rounded-xl font-medium text-sm transition btn-press">
                 <span v-if="favorited">♥</span>
@@ -238,10 +238,10 @@ onMounted(() => {
       <h3 class="font-display font-bold text-lg text-slate-800 mb-5">留言 <span class="text-slate-300 font-normal text-sm">({{ messages.length }})</span></h3>
 
       <div v-if="user && !isOwner && product.status !== 'removed'" class="flex gap-2.5 mb-6">
-        <input v-model="newMessage" @keyup.enter="sendMessage" type="text"
+        <input v-model="newMessage" @keyup.enter="sendMessage" type="text" data-testid="message-input"
           class="flex-1 border border-warm-200 rounded-xl px-4 py-2.5 text-sm bg-warm-50 focus:bg-white transition input-fancy"
           placeholder="咨询卖家..." />
-        <button @click="sendMessage" :disabled="!newMessage.trim()"
+        <button @click="sendMessage" :disabled="!newMessage.trim()" data-testid="send-msg-btn"
           class="bg-coral-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-coral-600 disabled:opacity-50 transition btn-press">
           发送
         </button>

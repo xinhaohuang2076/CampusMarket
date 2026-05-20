@@ -156,15 +156,15 @@ onMounted(fetchStats)
 
     <!-- Tabs -->
     <div class="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-warm-100">
-      <button @click="activeTab = 'dashboard'"
+      <button @click="activeTab = 'dashboard'" data-testid="admin-tab-overview"
         :class="['px-5 py-2 rounded-lg text-sm font-medium transition-all', activeTab === 'dashboard' ? 'bg-coral-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-warm-50']">
         概览
       </button>
-      <button @click="activeTab = 'users'"
+      <button @click="activeTab = 'users'" data-testid="admin-tab-users"
         :class="['px-5 py-2 rounded-lg text-sm font-medium transition-all', activeTab === 'users' ? 'bg-coral-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-warm-50']">
         用户管理
       </button>
-      <button @click="activeTab = 'products'"
+      <button @click="activeTab = 'products'" data-testid="admin-tab-products"
         :class="['px-5 py-2 rounded-lg text-sm font-medium transition-all', activeTab === 'products' ? 'bg-coral-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-warm-50']">
         商品管理
       </button>
